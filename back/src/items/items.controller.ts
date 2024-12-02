@@ -12,13 +12,23 @@ import {
 import { ItemsService } from './items.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
-import { ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+    ApiBody,
+    ApiConsumes, ApiExtraModels,
+    ApiOperation,
+    ApiParam,
+    ApiQuery,
+    ApiResponse,
+    ApiTags,
+    getSchemaPath,
+} from '@nestjs/swagger';
 import sharp from 'sharp';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as path from 'path';
 import * as fs from 'node:fs';
 import { CreateItemWithFileDto } from './dto/create-item-with-file.dto';
 import { ConfigService } from '@nestjs/config';
+import { Item } from './schemas/item.schema';
 
 const imageFileFilter = (req, file, callback) => {
     if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
@@ -31,6 +41,7 @@ const imageFileFilter = (req, file, callback) => {
 };
 
 @ApiTags('items')
+@ApiExtraModels(Item)
 @Controller('items')
 export class ItemsController {
 
@@ -85,7 +96,29 @@ export class ItemsController {
 
     @Get()
     @ApiOperation({ summary: 'Listar todos os itens com paginação, ordenação e filtros' })
-    @ApiResponse({ status: 200, description: 'Lista de itens retornada com sucesso.' })
+    @ApiResponse({
+        status: 200,
+        description: 'Lista de itens retornada com sucesso.',
+        schema: {
+            type: 'object',
+            properties: {
+                items: {
+                    type: 'array',
+                    items: { $ref: getSchemaPath(Item) },
+                },
+                meta: {
+                    type: 'object',
+                    properties: {
+                        totalItems: { type: 'number' },
+                        itemCount: { type: 'number' },
+                        itemsPerPage: { type: 'number' },
+                        totalPages: { type: 'number' },
+                        currentPage: { type: 'number' },
+                    },
+                },
+            },
+        },
+    })
     @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
     @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
     @ApiQuery({ name: 'sortBy', required: false, type: String, example: 'title' })

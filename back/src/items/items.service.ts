@@ -24,16 +24,32 @@ export class ItemsService {
       sortBy: string = 'createdAt',
       order: 'asc' | 'desc' = 'asc',
       filter?: any,
-    ): Promise<Item[]> {
+    ): Promise<any> {
         const skip = (page - 1) * limit;
         const sort = { [sortBy]: order };
-        return this.itemModel
+
+        const totalItems = await this.itemModel.countDocuments(filter).exec();
+
+        const items = await this.itemModel
           .find(filter)
           .sort(sort)
           .skip(skip)
           .limit(limit)
           .lean()
           .exec();
+
+        const totalPages = Math.ceil(totalItems / limit);
+
+        return {
+            items,
+            meta: {
+                totalItems,
+                itemCount: items.length,
+                itemsPerPage: limit,
+                totalPages,
+                currentPage: page,
+            },
+        };
     }
 
     async findOne(id: string): Promise<Item> {
