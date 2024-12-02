@@ -21,7 +21,7 @@ async function bootstrap() {
       forbidUnknownValues: true,
       stopAtFirstError: true,
       whitelist: true,
-      forbidNonWhitelisted: true
+      forbidNonWhitelisted: false
     })
   )
   useContainer(app.select(AppModule), { fallbackOnErrors: true })

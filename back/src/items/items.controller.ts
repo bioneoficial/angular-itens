@@ -109,14 +109,79 @@ export class ItemsController {
     }
 
     @Put(':id')
+    @UseInterceptors(
+      FileInterceptor('file', {
+          fileFilter: imageFileFilter,
+          limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+      }),
+    )
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        description: 'Dados do item e imagem para upload',
+        type: UpdateItemDto,
+    })
     @ApiOperation({ summary: 'Atualizar um item pelo ID' })
     @ApiParam({ name: 'id', description: 'ID do item' })
     @ApiResponse({ status: 200, description: 'Item atualizado com sucesso.' })
     @ApiResponse({ status: 404, description: 'Item não encontrado.' })
-    update(
-        @Param('id') id: string,
-        @Body() updateItemDto: UpdateItemDto,
+    async update(
+      @Param('id') id: string,
+      @UploadedFile() file: Express.Multer.File,
+      @Body() updateItemDto: UpdateItemDto,
     ) {
+        const existingItem = await this.itemsService.findOne(id);
+
+        if (file) {
+            const imagePath = path.join(__dirname, '..', '..', file.path);
+            const resizedImagePath = path.join(
+              __dirname,
+              '..',
+              '..',
+              'uploads',
+              `resized-${file.filename}`,
+            );
+
+            await sharp(imagePath)
+              .resize(500, 500)
+              .toFile(resizedImagePath);
+
+            fs.unlinkSync(imagePath);
+
+            if (existingItem.photo) {
+                const oldImagePath = path.join(
+                  __dirname,
+                  '..',
+                  '..',
+                  'uploads',
+                  existingItem.photo,
+                );
+                if (fs.existsSync(oldImagePath)) {
+                    fs.unlinkSync(oldImagePath);
+                }
+            }
+
+            updateItemDto.photo = `resized-${file.filename}`;
+            const hostUrl = this.configService.get<string>('HOST_URL') || 'http://localhost:3000';
+            updateItemDto.photoUrl = `${hostUrl}/uploads/resized-${file.filename}`;
+
+        }
+        if (updateItemDto.removeImage) {
+            if (existingItem.photo) {
+                const oldImagePath = path.join(
+                  __dirname,
+                  '..',
+                  '..',
+                  'uploads',
+                  existingItem.photo,
+                );
+                if (fs.existsSync(oldImagePath)) {
+                    fs.unlinkSync(oldImagePath);
+                }
+            }
+            updateItemDto.photo = '';
+            updateItemDto.photoUrl = '';
+        }
+
         return this.itemsService.update(id, updateItemDto);
     }
 

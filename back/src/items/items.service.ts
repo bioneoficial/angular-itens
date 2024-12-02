@@ -4,6 +4,8 @@ import { Model } from 'mongoose';
 import { Item, ItemDocument } from './schemas/item.schema';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
+import * as path from 'node:path';
+import * as fs from 'node:fs';
 
 @Injectable()
 export class ItemsService {
@@ -43,13 +45,28 @@ export class ItemsService {
     }
 
     async update(id: string, updateItemDto: UpdateItemDto): Promise<Item> {
-        const updatedItem = await this.itemModel
-            .findByIdAndUpdate(id, updateItemDto, { new: true })
-            .exec();
-        if (!updatedItem) {
+        const existingItem = await this.itemModel.findById(id).exec();
+        if (!existingItem) {
             throw new NotFoundException(`Item com ID '${id}' não encontrado`);
         }
-        return updatedItem;
+
+        if (updateItemDto.photo && existingItem.photo) {
+            const oldImagePath = path.join(
+              __dirname,
+              '..',
+              '..',
+              'uploads',
+              existingItem.photo,
+            );
+            if (fs.existsSync(oldImagePath)) {
+                fs.unlinkSync(oldImagePath);
+            }
+        }
+
+        return await this.itemModel
+          .findByIdAndUpdate(id, updateItemDto, { new: true })
+          .lean()
+          .exec();
     }
 
     async remove(id: string): Promise<Item> {
@@ -57,6 +74,20 @@ export class ItemsService {
         if (!deletedItem) {
             throw new NotFoundException(`Item com ID '${id}' não encontrado`);
         }
+
+        if (deletedItem.photo) {
+            const imagePath = path.join(
+              __dirname,
+              '..',
+              '..',
+              'uploads',
+              deletedItem.photo,
+            );
+            if (fs.existsSync(imagePath)) {
+                fs.unlinkSync(imagePath);
+            }
+        }
+
         return deletedItem;
     }
 }

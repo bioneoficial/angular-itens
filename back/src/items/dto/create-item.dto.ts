@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsString, IsOptional, IsUrl, Length } from 'class-validator';
-import {ApiProperty} from "@nestjs/swagger";
+import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
 
 export class CreateItemDto {
     @ApiProperty({
@@ -15,26 +15,18 @@ export class CreateItemDto {
         description: 'Descrição detalhada do item',
         example: 'Este é um item muito interessante.',
     })
-    @IsNotEmpty({ message: 'A descrição não pode estar vazia' })
     @IsString({ message: 'A descrição deve ser uma string' })
     @Length(10, 200, { message: 'A descrição deve ter entre 10 e 200 caracteres' })
+    @IsNotEmpty({ message: 'A descrição não pode estar vazia' })
     description: string;
 
-    @ApiProperty({
-        description: 'URL da foto do item',
-        example: 'http://bione.com/lindo.jpg',
-        required: false,
-    })
     @IsUrl({}, { message: 'A URL da foto deve ser válida' })
+    @ApiHideProperty()
     @IsOptional()
     photoUrl?: string;
 
-    @ApiProperty({
-        description: 'Nome do arquivo da foto',
-        example: 'resized-uuidv4().jpg',
-        required: false,
-    })
     @IsString()
+    @ApiHideProperty()
     @IsOptional()
     photo?: string;
 }
