@@ -13,8 +13,6 @@ async function bootstrap() {
   app.enableCors();
   app.useGlobalPipes(new ValidationPipe());
   app.enableShutdownHooks()
-  app.useBodyParser('json', { limit: '256kb' })
-  app.useBodyParser('urlencoded', { extended: true, limit: '256kb' })
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
