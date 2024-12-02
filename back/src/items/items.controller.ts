@@ -7,33 +7,18 @@ import {
     Delete,
     Put,
     HttpCode,
-    HttpStatus, UploadedFile, UseInterceptors, BadRequestException,
+    HttpStatus, UploadedFile, UseInterceptors, BadRequestException, Query, DefaultValuePipe, ParseIntPipe,
 } from '@nestjs/common';
 import { ItemsService } from './items.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
-import { ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import sharp from 'sharp';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
 import * as path from 'path';
-import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'node:fs';
-import { ConfigService } from '@nestjs/config';
 import { CreateItemWithFileDto } from './dto/create-item-with-file.dto';
-import { FileUploadDto } from './dto/file-upload.dto';
-
-const configService = new ConfigService();
-const uploadDir = configService.get<string>('UPLOADS_FOLDER') || './uploads';
-
-const  storage = diskStorage({
-    destination: uploadDir,
-    filename: (req, file, cb) => {
-        const fileExtName = path.extname(file.originalname);
-        const fileName = `${uuidv4()}${fileExtName}`;
-        cb(null, fileName);
-    },
-});
+import { ConfigService } from '@nestjs/config';
 
 const imageFileFilter = (req, file, callback) => {
     if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
@@ -48,14 +33,18 @@ const imageFileFilter = (req, file, callback) => {
 @ApiTags('items')
 @Controller('items')
 export class ItemsController {
-    constructor(private readonly itemsService: ItemsService) {}
+
+    constructor(
+      private readonly itemsService: ItemsService,
+      private readonly configService: ConfigService
+    ) {
+    }
 
     @Post()
     @UseInterceptors(
       FileInterceptor('file', {
-          storage: storage,
           fileFilter: imageFileFilter,
-          limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+          limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
       }),
     )
     @ApiConsumes('multipart/form-data')
@@ -80,62 +69,34 @@ export class ItemsController {
             );
 
             await sharp(imagePath)
-              .resize(500, 500) // 500x500 pixels
+              .resize(500, 500)
               .toFile(resizedImagePath);
 
             fs.unlinkSync(imagePath);
 
             createItemDto.photo = `resized-${file.filename}`;
-            createItemDto.photoUrl = `${process.env.HOST_URL}/uploads/resized-${file.filename}`;
+            const hostUrl = this.configService.get<string>('HOST_URL') || 'http://localhost:3000';
+            createItemDto.photoUrl = `${hostUrl}/uploads/resized-${file.filename}`;
         }
 
         return this.itemsService.create(createItemDto);
     }
 
 
-    @Post('upload')
-    @UseInterceptors(
-      FileInterceptor('file', {
-          storage: storage,
-          fileFilter: imageFileFilter,
-          limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-      }),
-    )
-    @ApiConsumes('multipart/form-data')
-    @ApiBody({
-        description: 'Arquivo de imagem para upload',
-        type: FileUploadDto,
-    })
-    @ApiOperation({ summary: 'Fazer upload de uma imagem' })
-    @ApiResponse({ status: 201, description: 'Imagem enviada com sucesso.' })
-    async uploadFile(@UploadedFile() file: Express.Multer.File) {
-        const imagePath = path.join(__dirname, '..', '..', file.path);
-        const resizedImagePath = path.join(
-          __dirname,
-          '..',
-          '..',
-          'uploads',
-          `resized-${file.filename}`,
-        );
-
-        await sharp(imagePath)
-          .resize(500, 500) // 500x500 pixels
-          .toFile(resizedImagePath);
-
-        fs.unlinkSync(imagePath);
-
-        return {
-            message: 'Imagem enviada e processada com sucesso',
-            fileName: `resized-${file.filename}`,
-        };
-    }
-
-
     @Get()
-    @ApiOperation({ summary: 'Listar todos os itens' })
+    @ApiOperation({ summary: 'Listar todos os itens com paginação, ordenação e filtros' })
     @ApiResponse({ status: 200, description: 'Lista de itens retornada com sucesso.' })
-    findAll() {
-        return this.itemsService.findAll();
+    @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+    @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
+    @ApiQuery({ name: 'sortBy', required: false, type: String, example: 'title' })
+    @ApiQuery({ name: 'order', required: false, type: String, enum: ['asc', 'desc'], example: 'asc' })
+    async findAll(
+      @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+      @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+      @Query('sortBy', new DefaultValuePipe('createdAt')) sortBy: string,
+      @Query('order', new DefaultValuePipe('asc')) order: 'asc' | 'desc',
+    ) {
+        return this.itemsService.findAll(page, limit, sortBy, order);
     }
 
     @Get(':id')

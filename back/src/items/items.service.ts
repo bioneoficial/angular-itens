@@ -16,12 +16,26 @@ export class ItemsService {
         return createdItem.save();
     }
 
-    async findAll(): Promise<Item[]> {
-        return this.itemModel.find().exec();
+    async findAll(
+      page: number = 1,
+      limit: number = 10,
+      sortBy: string = 'createdAt',
+      order: 'asc' | 'desc' = 'asc',
+      filter?: any,
+    ): Promise<Item[]> {
+        const skip = (page - 1) * limit;
+        const sort = { [sortBy]: order };
+        return this.itemModel
+          .find(filter)
+          .sort(sort)
+          .skip(skip)
+          .limit(limit)
+          .lean()
+          .exec();
     }
 
     async findOne(id: string): Promise<Item> {
-        const item = await this.itemModel.findById(id).exec();
+        const item = await this.itemModel.findById(id).lean().exec();
         if (!item) {
             throw new NotFoundException(`Item com ID '${id}' não encontrado`);
         }
