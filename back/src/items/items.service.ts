@@ -35,7 +35,6 @@ export class ItemsService {
           .sort(sort)
           .skip(skip)
           .limit(limit)
-          .lean()
           .exec();
 
         const totalPages = Math.ceil(totalItems / limit);
@@ -53,7 +52,7 @@ export class ItemsService {
     }
 
     async findOne(id: string): Promise<Item> {
-        const item = await this.itemModel.findById(id).lean().exec();
+        const item = await this.itemModel.findById(id).exec();
         if (!item) {
             throw new NotFoundException(`Item com ID '${id}' não encontrado`);
         }
@@ -81,7 +80,6 @@ export class ItemsService {
 
         return await this.itemModel
           .findByIdAndUpdate(id, updateItemDto, { new: true })
-          .lean()
           .exec();
     }
 

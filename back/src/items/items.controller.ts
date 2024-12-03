@@ -137,7 +137,7 @@ export class ItemsController {
     @ApiParam({ name: 'id', description: 'ID do item' })
     @ApiResponse({ status: 200, description: 'Item retornado com sucesso.' })
     @ApiResponse({ status: 404, description: 'Item não encontrado.' })
-    findOne(@Param('id') id: string) {
+    async findOne(@Param('id') id: string) {
         return this.itemsService.findOne(id);
     }
 
@@ -224,7 +224,7 @@ export class ItemsController {
     @ApiResponse({ status: 204, description: 'Item removido com sucesso.' })
     @ApiResponse({ status: 404, description: 'Item não encontrado.' })
     @HttpCode(HttpStatus.NO_CONTENT)
-    remove(@Param('id') id: string) {
+    async remove(@Param('id') id: string) {
         return this.itemsService.remove(id);
     }
 }
