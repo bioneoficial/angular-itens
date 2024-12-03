@@ -39,7 +39,6 @@ describe('ItemsService', () => {
   });
 
   afterEach(async () => {
-    // Limpar a coleção após cada teste
     await itemModel.deleteMany({});
   });
 

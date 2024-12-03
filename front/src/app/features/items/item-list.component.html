@@ -1,0 +1,44 @@
+<mat-toolbar color="primary">
+  <span>Lista de Itens</span>
+  <span class="spacer"></span>
+  <button mat-button color="accent" routerLink="/items/create">Novo Item</button>
+</mat-toolbar>
+
+<div class="container">
+  <mat-table [dataSource]="items" matSort>
+
+    <!-- Título -->
+    <ng-container matColumnDef="title">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>Título</mat-header-cell>
+      <mat-cell *matCellDef="let item">{{ item.title }}</mat-cell>
+    </ng-container>
+
+    <!-- Descrição -->
+    <ng-container matColumnDef="description">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>Descrição</mat-header-cell>
+      <mat-cell *matCellDef="let item">{{ item.description }}</mat-cell>
+    </ng-container>
+
+    <!-- Ações -->
+    <ng-container matColumnDef="actions">
+      <mat-header-cell *matHeaderCellDef>Ações</mat-header-cell>
+      <mat-cell *matCellDef="let item">
+        <button mat-icon-button color="primary" [routerLink]="['/items', item._id]">
+          <mat-icon>visibility</mat-icon>
+        </button>
+        <button mat-icon-button color="accent" [routerLink]="['/items/edit', item._id]">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button color="warn" (click)="deleteItem(item._id)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+
+  </mat-table>
+
+  <mat-paginator [length]="totalItems" [pageSize]="pageSize" (page)="onPageChange($event)"></mat-paginator>
+</div>
