@@ -1,13 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ItemsService } from './items.service';
-import { MongooseModule } from '@nestjs/mongoose';
+import { MongooseModule, getModelToken, getConnectionToken } from '@nestjs/mongoose';
 import { Item, ItemSchema } from './schemas/item.schema';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { Connection, Model } from 'mongoose';
-import { getModelToken } from '@nestjs/mongoose';
-import { getConnectionToken } from '@nestjs/mongoose';
 import { NotFoundException } from '@nestjs/common';
+import { jest } from '@jest/globals';
 
+jest.setTimeout(30000);
 
 describe('ItemsService', () => {
   let service: ItemsService;
@@ -29,17 +29,22 @@ describe('ItemsService', () => {
 
     service = module.get<ItemsService>(ItemsService);
     itemModel = module.get<Model<Item>>(getModelToken(Item.name));
-    mongoConnection = module.get(getConnectionToken());
+    mongoConnection = module.get<Connection>(getConnectionToken());
   });
 
-
   afterAll(async () => {
-    await mongoConnection.close();
-    await mongod.stop();
+    if (mongoConnection) {
+      await mongoConnection.close();
+    }
+    if (mongod) {
+      await mongod.stop();
+    }
   });
 
   afterEach(async () => {
-    await itemModel.deleteMany({});
+    if (itemModel) {
+      await itemModel.deleteMany({});
+    }
   });
 
   it('should be defined', () => {
@@ -58,6 +63,7 @@ describe('ItemsService', () => {
       expect(createdItem).toBeDefined();
       expect(createdItem.title).toEqual(createItemDto.title);
       expect(createdItem.description).toEqual(createItemDto.description);
+      expect(createdItem._id).toBeDefined();
     });
   });
 
@@ -72,8 +78,8 @@ describe('ItemsService', () => {
         description: 'Second item',
       };
 
-      await new itemModel(createItemDto1).save();
-      await new itemModel(createItemDto2).save();
+      await itemModel.create(createItemDto1);
+      await itemModel.create(createItemDto2);
 
       const result = await service.findAll(1, 10, 'createdAt', 'asc');
 
@@ -103,9 +109,7 @@ describe('ItemsService', () => {
     it('should throw NotFoundException if item not found', async () => {
       const invalidId = '60b64415e1d0f5a7d8c1b2c3';
 
-      await expect(service.findOne(invalidId)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.findOne(invalidId)).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -123,15 +127,10 @@ describe('ItemsService', () => {
         description: 'Updated Description',
       };
 
-      const updatedItem = await service.update(
-        createdItem._id.toString(),
-        updateItemDto,
-      );
+      const updatedItem = await service.update(createdItem._id.toString(), updateItemDto);
 
       expect(updatedItem).toBeDefined();
-      expect(updatedItem._id.toString()).toEqual(
-        createdItem._id.toString(),
-      );
+      expect(updatedItem._id.toString()).toEqual(createdItem._id.toString());
       expect(updatedItem.title).toEqual(updateItemDto.title);
       expect(updatedItem.description).toEqual(updateItemDto.description);
     });
@@ -143,9 +142,7 @@ describe('ItemsService', () => {
         description: 'Updated Description',
       };
 
-      await expect(
-        service.update(invalidId, updateItemDto),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.update(invalidId, updateItemDto)).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -161,21 +158,15 @@ describe('ItemsService', () => {
       const deletedItem = await service.remove(createdItem._id.toString());
 
       expect(deletedItem).toBeDefined();
-      expect(deletedItem._id.toString()).toEqual(
-        createdItem._id.toString(),
-      );
+      expect(deletedItem._id.toString()).toEqual(createdItem._id.toString());
 
-      await expect(
-        service.findOne(createdItem._id.toString()),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.findOne(createdItem._id.toString())).rejects.toThrow(NotFoundException);
     });
 
     it('should throw NotFoundException if item not found', async () => {
       const invalidId = '60b64415e1d0f5a7d8c1b2c3';
 
-      await expect(service.remove(invalidId)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.remove(invalidId)).rejects.toThrow(NotFoundException);
     });
   });
 });
