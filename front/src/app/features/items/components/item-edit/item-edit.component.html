@@ -1,0 +1,35 @@
+<mat-toolbar color="primary">
+  <span>Editar Item</span>
+  <span class="spacer"></span>
+  <button mat-button color="warn" (click)="cancel()">Cancelar</button>
+</mat-toolbar>
+
+<div class="form-container">
+  <form [formGroup]="editForm" (ngSubmit)="onSubmit()">
+    <mat-form-field appearance="outline">
+      <mat-label>Título</mat-label>
+      <input matInput formControlName="title" placeholder="Digite o título do item" />
+      <mat-error *ngIf="titleControl?.invalid && titleControl?.touched">Título é obrigatório</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Descrição</mat-label>
+      <textarea matInput formControlName="description" placeholder="Digite a descrição do item"></textarea>
+      <mat-error *ngIf="descriptionControl?.invalid && descriptionControl?.touched">Descrição é obrigatória</mat-error>
+    </mat-form-field>
+
+    <div class="file-input-container">
+      <label>Atualizar Foto (opcional):</label>
+      <input type="file" (change)="onFileSelected($event)" accept="image/*" />
+    </div>
+
+    <mat-checkbox formControlName="removeImage" (change)="onRemoveImageChange($event)">
+      Remover imagem existente?
+    </mat-checkbox>
+
+    <div class="actions">
+      <button mat-raised-button color="accent" type="submit">Salvar</button>
+      <button mat-raised-button type="button" (click)="cancel()">Cancelar</button>
+    </div>
+  </form>
+</div>

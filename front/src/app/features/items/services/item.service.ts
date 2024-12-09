@@ -6,8 +6,19 @@ export interface Item {
   _id?: string;
   title: string;
   description: string;
-  photoUrl?: string;
-  photo?: string;
+  photoUrl: string;
+  photo: string;
+}
+
+export interface GetItemsResponse {
+  items: Item[];
+  meta: {
+    totalItems: number;
+    itemCount: number;
+    itemsPerPage: number;
+    totalPages: number;
+    currentPage: number;
+  };
 }
 
 @Injectable({
@@ -18,20 +29,20 @@ export class ItemService {
 
   constructor(private http: HttpClient) { }
 
-  getItems(): Observable<Item[]> {
-    return this.http.get<Item[]>(this.apiUrl);
+  getItems(): Observable<GetItemsResponse> {
+    return this.http.get<GetItemsResponse>(this.apiUrl);
   }
 
   getItem(id: string): Observable<Item> {
     return this.http.get<Item>(`${this.apiUrl}/${id}`);
   }
 
-  createItem(item: Item): Observable<Item> {
-    return this.http.post<Item>(this.apiUrl, item);
+  createItem(data: Item | FormData): Observable<Item> {
+    return this.http.post<Item>(this.apiUrl, data);
   }
 
-  updateItem(id: string, item: Item): Observable<Item> {
-    return this.http.put<Item>(`${this.apiUrl}/${id}`, item);
+  updateItem(id: string, data: any): Observable<Item> {
+    return this.http.put<Item>(`${this.apiUrl}/${id}`, data);
   }
 
   deleteItem(id: string): Observable<void> {

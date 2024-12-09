@@ -1,0 +1,31 @@
+<mat-toolbar color="primary">
+  <button mat-icon-button color="accent" (click)="back()">
+    <mat-icon>arrow_back</mat-icon>
+  </button>
+  <span>Detalhes do Item</span>
+  <span class="spacer"></span>
+  <button mat-button color="accent" (click)="editItem()">Editar</button>
+</mat-toolbar>
+
+<div class="item-container" *ngIf="item">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>{{ item.title }}</mat-card-title>
+      <mat-card-subtitle>{{ item.description }}</mat-card-subtitle>
+    </mat-card-header>
+    <img
+      mat-card-image
+      *ngIf="item.photoUrl"
+      [src]="item.photoUrl"
+      alt="Imagem do item"
+    />
+    <mat-card-actions>
+      <button mat-raised-button color="primary" (click)="editItem()">Editar</button>
+      <button mat-raised-button (click)="back()">Voltar</button>
+    </mat-card-actions>
+  </mat-card>
+</div>
+
+<div class="no-item" *ngIf="!item">
+  Carregando item...
+</div>

@@ -1,0 +1,21 @@
+.item-container {
+  display: flex;
+  justify-content: center;
+  margin: 1rem;
+}
+
+mat-card {
+  max-width: 600px;
+  width: 100%;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.no-item {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+  color: #666;
+}

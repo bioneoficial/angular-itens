@@ -1,0 +1,48 @@
+.container {
+  padding: 1rem;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+mat-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+table {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+mat-header-cell, mat-cell {
+  padding: 0.5rem;
+  text-align: left;
+}
+
+mat-header-row, mat-row {
+  display: flex;
+  align-items: center;
+}
+
+mat-icon {
+  vertical-align: middle;
+}
+
+.filter-container {
+  margin-bottom: 1rem;
+}
+
+.mat-toolbar button {
+  background-color: #ffffff;
+  color: #003366;
+  border: 1px solid #ffffff;
+  font-weight: bold;
+}
+
+.mat-toolbar button:hover {
+  background-color: #e0e0e0;
+  color: #003366;
+}
