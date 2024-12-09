@@ -20,8 +20,8 @@ export class ItemCreateComponent implements OnInit {
     private toastr: ToastrService
   ) {
     this.createForm = this.fb.group({
-      title: ['', [Validators.required]],
-      description: ['', [Validators.required]],
+      title: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50)]],
+      description: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(200)]],
     });
   }
 
@@ -42,35 +42,35 @@ export class ItemCreateComponent implements OnInit {
     }
 
     const { title, description } = this.createForm.value;
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('description', description);
 
     if (this.selectedFile) {
-      const formData = new FormData();
-      formData.append('title', title);
-      formData.append('description', description);
       formData.append('file', this.selectedFile);
-
-      this.itemService.createItem(formData).subscribe(
-        _createdItem => {
-          this.toastr.success('Item criado com sucesso');
-          this.router.navigate(['/items']);
-        },
-        _error => {
-          this.toastr.error('Erro ao criar item');
-        }
-      );
-    } else {
-      const createData = { title, description, photo: '', photoUrl: '' };
-      this.itemService.createItem(createData).subscribe(
-        _createdItem => {
-          this.toastr.success('Item criado com sucesso');
-          this.router.navigate(['/items']);
-        },
-        _error => {
-          this.toastr.error('Erro ao criar item');
-        }
-      );
     }
+
+    this.itemService.createItem(formData).subscribe(
+      _createdItem => {
+        this.toastr.success('Item criado com sucesso');
+        this.router.navigate(['/items']);
+      },
+      error => {
+      if (error.error && error.error.message) {
+        const errorMessages = Array.isArray(error.error.message)
+          ? error.error.message.join('<br>')
+          : error.error.message;
+
+        this.toastr.error(errorMessages, '', {
+          enableHtml: true,
+        });
+      } else {
+        this.toastr.error('Erro ao criar item');
+      }
+    }
+  );
   }
+
 
   cancel(): void {
     this.router.navigate(['/items']);

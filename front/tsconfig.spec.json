@@ -7,7 +7,10 @@
     ]
   },
   "include": [
-    "front/src/**/*.spec.ts",
-    "front/src/**/*.d.ts"
+    "src/**/*.spec.ts",
+    "src/**/*.d.ts"
+  ],
+  "exclude": [
+    "./out-tsc/spec"
   ]
 }

@@ -9,16 +9,28 @@
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Título</mat-label>
       <input matInput formControlName="title" placeholder="Digite o título do item" />
-      <mat-error *ngIf="titleControl.invalid && (titleControl.dirty)">
+      <mat-error *ngIf="titleControl.hasError('required') && titleControl.dirty">
         Título é obrigatório
+      </mat-error>
+      <mat-error *ngIf="titleControl.hasError('minlength') && titleControl.dirty">
+        O título deve ter pelo menos 3 caracteres
+      </mat-error>
+      <mat-error *ngIf="titleControl.hasError('maxLength') && titleControl.dirty">
+        O título não pode exceder 50 caracteres
       </mat-error>
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Descrição</mat-label>
       <textarea matInput formControlName="description" placeholder="Digite a descrição do item"></textarea>
-      <mat-error *ngIf="descriptionControl.invalid && (descriptionControl.dirty)">
+      <mat-error *ngIf="descriptionControl.hasError('required') && descriptionControl.dirty">
         Descrição é obrigatória
+      </mat-error>
+      <mat-error *ngIf="descriptionControl.hasError('minlength') && descriptionControl.dirty">
+        A descrição deve ter pelo menos 10 caracteres
+      </mat-error>
+      <mat-error *ngIf="descriptionControl.hasError('maxLength') && descriptionControl.dirty">
+        A descrição não pode exceder 200 caracteres
       </mat-error>
     </mat-form-field>
 
